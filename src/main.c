@@ -1280,7 +1280,8 @@ void rom_load_y(void)
     fr = f_stat(gb_sram_file2, &fno);
     if (fr == FR_OK) 
     {
-        gb_load_y = 1;
+	    // Remove check for ED64Plus
+	    //        gb_load_y = 0;
     }
 }
 
