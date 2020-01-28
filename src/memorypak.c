@@ -15,6 +15,7 @@
 #include "debug.h"
 #include "strlib.h"
 #include "sys.h"
+#include <stdlib.h>
 
 
 enum MemoryPakFormat
@@ -29,11 +30,11 @@ char *mempak_path;
 
 char ___TranslateNotes(char *bNote, char *Text)
 {
-#pragma warning(disable : 4305 4309)
+//#pragma warning(disable : 4305 4309)
     char cReturn = 0x00;
     const char aSpecial[] = {0x21, 0x22, 0x23, 0x60, 0x2A, 0x2B, 0x2C, 0x2D, 0x2E, 0x2F, 0x3A, 0x3D, 0x3F, 0x40, 0x74, 0xA9, 0xAE};
                         //  { '!' , '\"', '#' , '`' , '*' , '+' , ',' , '-' , '.' , '/' , ':' , '=' , '?' , '>' , 'tm', '(r)','(c)' };
-#pragma warning(default : 4305 4309)
+//#pragma warning(default : 4305 4309)
     int i = 16;
     do
     {
@@ -196,7 +197,7 @@ void view_mpk_file(display_context_t disp, char *mpk_filename)
 
         int notes_c = 0;
 
-        char szBuffer[40],
+        char szBuffer[58],
             cAppendix;
         int bFirstChar;
 
@@ -225,7 +226,14 @@ void view_mpk_file(display_context_t disp, char *mpk_filename)
                         cAppendix = ___TranslateNotes(&mempak_data[0x300 + (notes_c * 32)], szBuffer);
 
                         if (cAppendix != '\0')
-                            sprintf(szBuffer, "%s. %c", szBuffer, cAppendix);
+                        {
+                            char *buf = szBuffer;
+
+                            int strLength = snprintf(0, 0, "%s. %c", buf, cAppendix);
+                            //assert(strLength >= 0); // TODO add proper error handling
+                            //szBuffer = malloc(sizeof(char) * (strLength + 1));
+                            snprintf(szBuffer, strLength+1, "%s. %c", buf, cAppendix);
+                        }
 
                         bFirstChar = 1;
                         for (i = 0; i < (int)strlen(szBuffer); i++)
@@ -383,7 +391,6 @@ void mpk_to_file(display_context_t disp, char *mpk_filename, int quick)
 {
     u8 buff[64];
     u8 v = 0;
-    u8 ok = 0;
 
     if (quick)
         sprintf(buff, "%s%s", mempak_path, mpk_filename);

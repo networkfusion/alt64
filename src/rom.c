@@ -59,18 +59,18 @@ void swap_header(unsigned char* header, int loadlength) {
 u8 getCicType(u8 bios_cic) {
     u8 cic_buff[2048];
     volatile u8 cic_chip;
-    volatile u32 val;
+    //volatile u32 val;
     if (bios_cic) {
         evd_setCfgBit(ED_CFG_SDRAM_ON, 0);
         sleep(10);
-        val = *(u32 *) 0xB0000170;
+        //val = *(u32 *) 0xB0000170;
         dma_read_s(cic_buff, 0xB0000040, 1024);
         cic_chip = get_cic(cic_buff);
         evd_setCfgBit(ED_CFG_SDRAM_ON, 1);
         sleep(10);
     }
     else {
-        val = *(u32 *) 0xB0000170;
+        //val = *(u32 *) 0xB0000170;
         dma_read_s(cic_buff, 0xB0000040, 1024);
         cic_chip = get_cic(cic_buff);
     }

@@ -545,7 +545,7 @@ u8 diskInitSPI() {
     u32 u;
 
     volatile u8 resp = 0;
-    u8 cmd;
+    //u8 cmd;
     u32 wait_len = WAIT;
 
     card_type = 0;
@@ -600,7 +600,7 @@ u8 diskInitSPI() {
         if (resp == 0xff)return DISK_ERR_INIT + 6;
         resp = diskCmdSPI(CMD41, 0);
         if (resp == 0xff)return DISK_ERR_INIT + 7;
-        cmd = resp;
+        //cmd = resp;
 
         for (i = 0; i < wait_len; i++) {
             if (resp < 1) {

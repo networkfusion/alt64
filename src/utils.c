@@ -20,8 +20,8 @@ extern short int gCheats;               /* 0 = off, 1 = select, 2 = all */
 extern short int force_tv;
 extern short int boot_country;
 
-static u8 __attribute__((aligned(16))) dmaBuf[128*1024];
-static volatile struct _PI_regs_s * const _PI_regs = (struct _PI_regs_s *)0xa4600000;
+//static u8 __attribute__((aligned(16))) dmaBuf[128*1024];
+//static volatile struct _PI_regs_s * const _PI_regs = (struct _PI_regs_s *)0xa4600000;
 
 
 
@@ -259,7 +259,7 @@ int getFlashRAM( uint8_t *buffer){
     evd_setSaveType(SAVE_TYPE_SRAM96); //2
     sleep(10);
 
-    int s = getSRAM(buffer, SAVE_SIZE_SRAM96);
+    getSRAM(buffer, SAVE_SIZE_SRAM96);
     data_cache_hit_writeback_invalidate(buffer,SAVE_SIZE_SRAM96);
 
     sleep(10);
@@ -331,7 +331,7 @@ int setFlashRAM(uint8_t *buffer){
     evd_setSaveType(SAVE_TYPE_SRAM96); //2
     sleep(10);
 
-    int s = setSRAM(buffer, SAVE_SIZE_SRAM96);
+    setSRAM(buffer, SAVE_SIZE_SRAM96);
 
     evd_setSaveType(SAVE_TYPE_FLASH); //5
 

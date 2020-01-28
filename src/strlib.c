@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2017 The Altra64 project contributors
+// Copyright (c) 2019 The Altra64 project contributors
 // Portions (c) 2013 saturnu (Alt64) based on libdragon, Neo64Menu, ED64IO, libn64-hkz, libmikmod
 // See LICENSE file in the project root for full license information.
 //
@@ -10,7 +10,7 @@
 char *strcpytrim(char *d, // destination
                  char *s, // source
                  int mode,
-                 char *delim
+                 const char *delim
                  ) {
     char *o = d; // save orig
     char *e = 0; // end space ptr.
@@ -19,10 +19,10 @@ char *strcpytrim(char *d, // destination
 
     if (!delim) delim = " \t\n\f";
     while (*delim) 
-        dtab[*delim++] = 1;
+        dtab[(unsigned int)*delim++] = 1;
 
     while ( (*d = *s++) != 0 ) { 
-        if (!dtab[*d]) { // Not a match char
+        if (!dtab[0xFF & (unsigned int)*d]) { // Not a match char
             e = 0;       // Reset end pointer
         } else {
             if (!e) e = d;  // Found first match.

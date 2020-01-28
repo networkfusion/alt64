@@ -111,7 +111,7 @@ typedef struct
 volatile u32 *romaddr_ptr = (u32 *)ROM_ADDR;
 unsigned int gBootCic = CIC_6102;
 
-static void *bg_buffer;
+//static void *bg_buffer;
 void *__safe_bg_buffer;
 
 #define __get_buffer(x) __safe_buffer[(x)-1]
@@ -180,8 +180,8 @@ int save_after_reboot = 0;
 
 //cart id from the rom header
 unsigned char cartID[4];
-char curr_dirname[64];
-char pwd[64];
+char curr_dirname[256];
+char pwd[308];
 TCHAR rom_filename[256];
 
 u32 rom_buff[128]; //rom buffer
@@ -443,7 +443,8 @@ void display_dir(direntry_t *list, int cursor, int page, int max, int count, dis
 
     c_pos[c_pos_counter++] = 0;
 
-    u8 c_dirname[64];
+    char *c_dirname;
+    int strLength = 0;
 
     if (page_display)
     {
@@ -452,18 +453,32 @@ void display_dir(direntry_t *list, int cursor, int page, int max, int count, dis
         u8 ci = 0;
 
         if (count % 20 == 0)
+        {
             ci = (count - 1) / 20;
+        }
         else
+        {
             ci = count / 20;
-        sprintf(c_dirname, "%i/%i SD:/%s", pi + 1, ci + 1, pwd);
+        }
+     
+        strLength = snprintf(0, 0, "%i/%i SD:/%s", pi + 1, ci + 1, pwd);
+        //assert(strLength >= 0); // TODO add proper error handling
+        c_dirname = malloc(sizeof(char) * (strLength + 1));
+        snprintf(c_dirname, strLength+1, "%i/%i SD:/%s", pi + 1, ci + 1, pwd);
+
     }
     else
     {
-        sprintf(c_dirname, "SD:/%s", pwd);
+        strLength = snprintf(0, 0, "SD:/%s", pwd);
+        //assert(strLength >= 0); // TODO add proper error handling
+        c_dirname = malloc(sizeof(char) * (strLength + 1));
+        snprintf(c_dirname, strLength+1, "SD:/%s", pwd);
     }
     char sel_str[128];
 
     printText(c_dirname, 3, 4, disp);
+
+    free(c_dirname);
 
     int firstrun = 1;
     /* Page bounds checking */
@@ -911,7 +926,7 @@ void romInfoScreen(display_context_t disp, u8 *buff, int silent)
     TCHAR filename[64];
     sprintf(filename, "%s", buff);
     
-    int swapped = 0;
+    //int swapped = 0;
 
     FRESULT result;
   
@@ -940,22 +955,35 @@ void romInfoScreen(display_context_t disp, u8 *buff, int silent)
 
         if (sw_type != 0)
         {
-            swapped = 1;
+            //swapped = 1;
             swap_header(headerdata, 512);
         }
 
         if (silent != 1)
         {
             //char 32-51 name
-            unsigned char rom_name[32];
+            unsigned char rom_name[20];
 
-            for (int u = 0; u < 19; u++)
-            {
-                if (u != 0)
-                    sprintf(rom_name, "%s%c", rom_name, headerdata[32 + u]);
-                else
-                    sprintf(rom_name, "%c", headerdata[32 + u]);
-            }
+            snprintf("%.*s", 32, headerdata + 19);
+
+            // for (int u = 0; u < 19; u++)
+            // {
+            //     if (u != 0)
+            //     {
+            //         unsigned char *buf = rom_name;
+            //         int strLength = snprintf(0, 0, "%s%c", buf, headerdata[32 + u]);
+            //         //assert(strLength >= 0); // TODO add proper error handling
+            //         rom_name = malloc(sizeof(char) * (strLength + 1));
+            //         snprintf(rom_name, strLength+1, "%s%c", buf, headerdata[32 + u]);
+            //     }
+            //     else
+            //     {
+            //         int strLength = snprintf(0, 0, "%c", headerdata[32 + u]);
+            //         //assert(strLength >= 0); // TODO add proper error handling
+            //         rom_name = malloc(sizeof(char) * (strLength + 1));
+            //         snprintf(rom_name, strLength+1, "%c", headerdata[32 + u]);
+            //     }
+            // }
 
             //rom name
             sprintf(rom_name, "%s", trim(rom_name));
@@ -977,7 +1005,7 @@ void romInfoScreen(display_context_t disp, u8 *buff, int silent)
         cic = get_cic(&headerdata[0x40]);
 
         unsigned char cartID_short[4];
-        sprintf(cartID_short, "%c%c\0", headerdata[0x3C], headerdata[0x3D]);
+        sprintf(cartID_short, "%c%c%c", headerdata[0x3C], headerdata[0x3D], '\0');
 
         if (get_cic_save(cartID_short, &cic, &save))
         {
@@ -988,15 +1016,15 @@ void romInfoScreen(display_context_t disp, u8 *buff, int silent)
                 sprintf(save_type_str, "Save: %s", saveTypeToExtension(save, ext_type));
                 printText(save_type_str, 11, -1, disp);
 
-                unsigned char cic_type_str[12];
+                unsigned char cic_type_str[24];
 
                 switch (cic)
                 {
                     case 4:
-                    sprintf(cic_type_str, "CIC: CIC-5101", cic);
+                    sprintf(cic_type_str, "CIC: CIC-5101");
                     break;
                     case 7:
-                    sprintf(cic_type_str, "CIC: CIC-5167", cic);
+                    sprintf(cic_type_str, "CIC: CIC-5167");
                     break;
                     default:
                     sprintf(cic_type_str, "CIC: CIC-610%i", cic);
@@ -1093,7 +1121,7 @@ void loadgbrom(display_context_t disp, u8 *buff)
 
         FRESULT result;
         FIL file;
-        UINT bytesread;
+        //UINT bytesread;
         result = f_open(&file, gb_sram_file, FA_WRITE | FA_OPEN_ALWAYS);
     
         if (result == FR_OK)
@@ -1273,7 +1301,7 @@ void rom_load_y(void)
     FILINFO fno;
 
     u8 gb_sram_file[64];
-    u8 gb_sram_file2[64];
+    u8 gb_sram_file2[72];
     sprintf(gb_sram_file, "%c%c%c%c%c%c%c", 'O', 'S', '6', '4', 'P', '/', 'O');
     sprintf(gb_sram_file2, "%s%c%c%c%c%c%c%c%c", gb_sram_file, 'S', '6', '4', 'P', '.', 'v', '6', '4');
 
@@ -1380,15 +1408,29 @@ void loadrom(display_context_t disp, u8 *buff, int fast)
         if (fast != 1)
         {
             //char 32-51 name
-            unsigned char rom_name[32];
+            unsigned char rom_name[20];
 
-            for (int u = 0; u < 19; u++)
-            {
-                if (u != 0)
-                    sprintf(rom_name, "%s%c", rom_name, headerdata[32 + u]);
-                else
-                    sprintf(rom_name, "%c", headerdata[32 + u]);
-            }
+            snprintf("%.*s", 32, headerdata + 19);
+
+            // for (int u = 0; u < 19; u++)
+            // {
+            //     if (u != 0)
+            //     {
+            //         unsigned char *buf = rom_name;
+
+            //         int strLength = snprintf(0, 0, "%s%c", buf, headerdata[32 + u]);
+            //         //assert(strLength >= 0); // TODO add proper error handling
+            //         rom_name = malloc(sizeof(char) * (strLength + 1));
+            //         snprintf(rom_name, strLength+1, "%s%c", buf, headerdata[32 + u]);
+            //     }
+            //     else
+            //     {
+            //         int strLength = snprintf(0, 0, "%c", headerdata[32 + u]);
+            //         //assert(strLength >= 0); // TODO add proper error handling
+            //         rom_name = malloc(sizeof(char) * (strLength + 1));
+            //         snprintf(rom_name, strLength+1, "%c", headerdata[32 + u]);
+            //     }
+            // }
 
             //rom name
             sprintf(rom_name, "%s", trim(rom_name));
@@ -1397,6 +1439,8 @@ void loadrom(display_context_t disp, u8 *buff, int fast)
             //rom size
             sprintf(rom_name, "Size: %iMB", fsizeMB);
             printText(rom_name, 3, -1, disp);
+
+            //free(rom_name);
         
 
             //unique cart id for gametype
@@ -1410,7 +1454,7 @@ void loadrom(display_context_t disp, u8 *buff, int fast)
         cic = get_cic(&headerdata[0x40]);
 
         unsigned char cartID_short[4];
-        sprintf(cartID_short, "%c%c\0", headerdata[0x3C], headerdata[0x3D]);
+        sprintf(cartID_short, "%c%c%c", headerdata[0x3C], headerdata[0x3D], '\0');
 
         if (get_cic_save(cartID_short, &cic, &save))
         {
@@ -1421,15 +1465,15 @@ void loadrom(display_context_t disp, u8 *buff, int fast)
                 sprintf(save_type_str, "Save: %s", saveTypeToExtension(save, ext_type));
                 printText(save_type_str, 3, -1, disp);
 
-                unsigned char cic_type_str[12];
+                unsigned char cic_type_str[24];
 
                 switch (cic)
                 {
                     case 4:
-                    sprintf(cic_type_str, "CIC: CIC-5101", cic);
+                    sprintf(cic_type_str, "CIC: CIC-5101");
                     break;
                     case 7:
-                    sprintf(cic_type_str, "CIC: CIC-5167", cic);
+                    sprintf(cic_type_str, "CIC: CIC-5167");
                     break;
                     default:
                     sprintf(cic_type_str, "CIC: CIC-610%i", cic);
@@ -1537,7 +1581,7 @@ int backupSaveData(display_context_t disp)
     {
         printText("updating last played game record...", 3, 4, disp);
 
-        int fsize = f_size(&file);
+        //int fsize = f_size(&file);
 
 
         result =
@@ -1551,7 +1595,7 @@ int backupSaveData(display_context_t disp)
         //split in save type and cart-id
         save_format = cfg_data[0];
 
-        f_gets(rom_filename, 256, &file);
+        f_gets(rom_filename, 308, &file);
         f_close(&file);
 
         //set savetype to 0 disable for next boot
@@ -1574,7 +1618,8 @@ int backupSaveData(display_context_t disp)
             TRACE(disp, "Disabling save for subsequent system reboots");
 
             volatile u8 save_config_state = 0;
-            int cfgreg = evd_readReg(REG_CFG);
+            //int cfgreg = 
+            evd_readReg(REG_CFG);
             save_config_state = evd_readReg(REG_SAV_CFG);
 
             if (save_config_state != 0 || evd_getFirmVersion() >= 0x0300)
@@ -1650,7 +1695,7 @@ int saveTypeFromSd(display_context_t disp, char *rom_name, int stype)
 
     if (result == FR_OK)
     {
-        int fsize = f_size(&file);
+        //int fsize = f_size(&file);
 
         result =
         f_read (
@@ -1727,8 +1772,8 @@ int saveTypeToSd(display_context_t disp, char *rom_name, int stype)
 
     FRESULT result;
     FIL file;
-    UINT bytesread;
-    result = f_open(&file, fname, FA_WRITE | FA_OPEN_ALWAYS); //Could use FA_CREATE_ALWAYS but this could lead to the posibility of the file being emptied
+    //UINT bytesread;
+    result = f_open(&file, fname, FA_WRITE | FA_OPEN_ALWAYS); //Could use FA_CREATE_ALWAYS but this could lead to the possibility of the file being emptied
 
     if (result == FR_OK)
     {
@@ -1769,6 +1814,7 @@ int saveTypeToSd(display_context_t disp, char *rom_name, int stype)
     {
         TRACE(disp, "COULDNT CREATE FILE :-(");
     }
+    return 0;
 }
 
 //check out the userfriendly ini file for config-information
@@ -1832,6 +1878,7 @@ int readConfigFile(void)
             return 1;
         }
     }
+    return 0;
 }
 
 int str2int(char data)
@@ -1937,7 +1984,7 @@ void readSDcard(display_context_t disp, char *directory)
 
     FRESULT res;
     DIR dir;
-    UINT i;
+    //UINT i;
     static FILINFO fno;
 
 
@@ -2219,15 +2266,20 @@ void bootRom(display_context_t disp, int silent)
     {
         if (boot_save != 0)
         {
-            TCHAR cfg_file[32];
+            TCHAR *cfg_file;
 
             //set cfg file with last loaded cart info and save-type
-            sprintf(cfg_file, "/ED64/%s/LASTROM.CFG", save_path);
+            int strLength = snprintf(0, 0, "/ED64/%s/LASTROM.CFG", save_path);
+            //assert(strLength >= 0); // TODO add proper error handling
+            cfg_file = malloc(sizeof(char) * (strLength + 1));
+            snprintf(cfg_file, strLength+1, "/ED64/%s/LASTROM.CFG", save_path);
 
             FRESULT result;
             FIL file;
             result = f_open(&file, cfg_file, FA_WRITE | FA_CREATE_ALWAYS);
-        
+
+            free(cfg_file);
+            
             if (result == FR_OK)
             {
                 uint8_t cfg_data[2] = {boot_save, boot_cic};
@@ -2255,10 +2307,11 @@ void bootRom(display_context_t disp, int silent)
         TRACE(disp, "Cartridge-Savetype set");
         TRACE(disp, "information stored for reboot-save...");
 
-        u32 cart, country;
-        u32 info = *(vu32 *)0xB000003C;
-        cart = info >> 16;
-        country = (info >> 8) & 0xFF;
+        //u32 cart, country;
+        //u32 info = 
+        *(vu32 *)0xB000003C;
+        //cart = info >> 16;
+        //country = (info >> 8) & 0xFF;
 
         u32 *cheat_lists[2] = {NULL, NULL};
         if (cheats_on)
@@ -2266,10 +2319,17 @@ void bootRom(display_context_t disp, int silent)
             gCheats = 1;
             printText("try to load cheat-file...", 3, -1, disp);
 
-            char cheat_filename[64];
-            sprintf(cheat_filename, "/ED64/CHEATS/%s.yml", rom_filename);
+            char *cheat_filename;
+
+            int strLength = snprintf(0, 0, "/ED64/CHEATS/%s.yml", rom_filename);
+            //assert(strLength >= 0); // TODO add proper error handling
+            cheat_filename = malloc(sizeof(char) * (strLength + 1));
+            snprintf(cheat_filename, strLength+1, "/ED64/CHEATS/%s.yml", rom_filename);
 
             int ok = readCheatFile(cheat_filename, cheat_lists);
+
+            free(cheat_filename);
+
             if (ok == 0)
             {
                 printText("cheats found...", 3, -1, disp);
@@ -2332,8 +2392,15 @@ void drawInputAdd(display_context_t disp, char *msg)
 {
     graphics_draw_box_trans(disp, 23, 5, 272, 18, 0x00000090);
     position++;
-    sprintf(input_text, "%s%s", input_text, msg);
-    drawTextInput(disp, input_text);
+
+    char *text;
+    int strLength = snprintf(0, 0, "%s%s", input_text, msg);
+    //assert(strLength >= 0); // TODO add proper error handling
+    text = malloc(sizeof(char) * (strLength + 1));
+    snprintf(text, strLength+1, "%s%s", input_text, msg);
+
+    drawTextInput(disp, text);
+    free(text);
 }
 
 //del the last char at the text input screen
@@ -2402,10 +2469,14 @@ void drawShortInfoBox(display_context_t disp, char *text, u8 mode)
 
 void readRomConfig(display_context_t disp, char *short_filename, char *full_filename)
 {
-    TCHAR cfg_filename[256];
+    TCHAR *cfg_filename;
     sprintf(rom_filename, "%s", short_filename);
     rom_filename[strlen(rom_filename) - 4] = '\0'; // cut extension
-    sprintf(cfg_filename, "/ED64/CFG/%s.CFG", rom_filename);
+
+    int strLength = snprintf(0, 0, "/ED64/CFG/%s.CFG", rom_filename);
+    //assert(strLength >= 0); // TODO add proper error handling
+    cfg_filename = malloc(sizeof(char) * (strLength + 1));
+    snprintf(cfg_filename, strLength+1, "/ED64/CFG/%s.CFG", rom_filename);
 
     uint8_t rom_cfg_data[512];
 
@@ -2413,6 +2484,8 @@ void readRomConfig(display_context_t disp, char *short_filename, char *full_file
     FIL file;
     UINT bytesread;
     result = f_open(&file, cfg_filename, FA_READ);
+
+    free(cfg_filename);
 
     if (result == FR_OK)
     {
@@ -2610,7 +2683,7 @@ void drawToplistBox(display_context_t disp, int line)
         
         FRESULT res;
         DIR dir;
-        UINT i;
+        UINT i = 0;
         static FILINFO fno;
 
         //TODO: is there a better way we can count the entries perhaps a hashtable?
@@ -2640,15 +2713,20 @@ void drawToplistBox(display_context_t disp, int line)
                     // if (res != FR_OK) break;
                     // path[i] = 0;
                 } else {                                       /* It is a file. */
-                    TCHAR rom_cfg_file[128];
+                    TCHAR *rom_cfg_file;
                     
                     //set rom_cfg
-                    sprintf(rom_cfg_file, path, fno.fname);
+                    int strLength = snprintf(0, 0,  "%s%s", path, fno.fname);
+                    //assert(strLength >= 0); // TODO add proper error handling
+                    rom_cfg_file = malloc(sizeof(char) * (strLength + 1));
+                    snprintf(rom_cfg_file, strLength+1, "%s%s", path, fno.fname);
                     
                     FRESULT result;
                     FIL file;
                     UINT bytesread;
                     result = f_open(&file, rom_cfg_file, FA_READ);
+
+                    free(rom_cfg_file);
                 
                     if (result == FR_OK)
                     {
@@ -2668,7 +2746,7 @@ void drawToplistBox(display_context_t disp, int line)
                         f_close(&file);
                 
                         toplist[i][0] = (char)cfg_file_data[5];     //quality
-                        strcpy(toplist[i] + 1, cfg_file_data + 32); //fullpath
+                        strcpy(&toplist[i][1], &cfg_file_data + 32); //fullpath //TODO: check correctness!
                         i++;
                     }
                 }
@@ -3051,7 +3129,7 @@ void showAboutScreen(display_context_t disp)
 
 void loadFile(display_context_t disp)
 {
-    char name_file[256];
+    char name_file[796];
 
     if (strcmp(pwd, "/") == 0)
         sprintf(name_file, "/%s", list[cursor].filename);
@@ -3059,35 +3137,29 @@ void loadFile(display_context_t disp)
         sprintf(name_file, "%s/%s", pwd, list[cursor].filename);
 
     int ft = 0;
-    char _upper_name_file[256];
-
-    strcpy(_upper_name_file, name_file);
-
-    strhicase(_upper_name_file, strlen(_upper_name_file));
-    sprintf(_upper_name_file, "%s", _upper_name_file);
 
     u8 extension[4];
     u8 *pch;
-    pch = strrchr(_upper_name_file, '.'); //asd.n64
+    pch = strrchr(name_file, '.'); //asd.n64
 
     sprintf(extension, "%s", (pch + 1)); //0123456
 
 
-    if (!strcmp(extension, "Z64") || !strcmp(extension, "V64") || !strcmp(extension, "N64")) //TODO: an enum would be better
+    if (!strncmpci(extension, "Z64", 4) || !strncmpci(extension, "V64", 4) || !strncmpci(extension, "N64", 4)) //TODO: an enum would be better
         ft = 1;
-    else if (!strcmp(extension, "MPK"))
+    else if (!strncmpci(extension, "MPK", 4))
         ft = 2;
-    if (!strcmp(extension, "GB"))
+    if (!strncmpci(extension, "GB", 4))
         ft = 5;
-    else if (!strcmp(extension, "GBC"))
+    else if (!strncmpci(extension, "GBC", 4))
         ft = 6;
-    else if (!strcmp(extension, "NES"))
+    else if (!strncmpci(extension, "NES", 4))
         ft = 7;
-    else if (!strcmp(extension, "GG"))
+    else if (!strncmpci(extension, "GG", 4))
         ft = 8;
-    else if (!strcmp(extension, "MSX"))
+    else if (!strncmpci(extension, "MSX", 4))
         ft = 9;
-    else if (!strcmp(extension, "MP3"))
+    else if (!strncmpci(extension, "MP3", 4))
         ft = 10;
 
     if (ft != 10 || ft != 2)
@@ -3096,7 +3168,7 @@ void loadFile(display_context_t disp)
             ;
 
         clearScreen(disp);
-        u16 msg = 0;
+        //u16 msg = 0;
         evd_ulockRegs();
         sleep(10);
         sprintf(rom_filename, "%s", list[cursor].filename);
@@ -3154,7 +3226,8 @@ void loadFile(display_context_t disp)
         display_show(disp);
         drawShortInfoBox(disp, " L=Restore  R=Backup", 2);
         input_mapping = mpk_choice;
-        sprintf(rom_filename, "%s", name_file);
+        strcpy(rom_filename, name_file);
+        //sprintf(rom_filename, "%s", name_file);
         break;
     case 5:
     case 6:
@@ -3180,8 +3253,8 @@ void loadFile(display_context_t disp)
         clearScreen(disp);
         drawShortInfoBox(disp, "      Loading...", 0);
         display_show(disp);
-        long long start = 0, end = 0, curr, pause = 0, samples;
-        int rate = 44100, last_rate = 44100, channels = 2;
+        long long samples;
+        int rate = 44100, channels = 2;
 
         audio_init(44100, 4);
         buf_size = audio_get_buffer_length() * 4;
@@ -3468,7 +3541,7 @@ void handleInput(display_context_t disp, sprite_t *contr)
             {
                 FRESULT result;
                 FIL file;
-                UINT bytesread;
+                //UINT bytesread;
                 result = f_open(&file, "/ED64/LASTROM.CFG", FA_READ);
             
                 if (result == FR_OK)
@@ -3795,7 +3868,7 @@ void handleInput(display_context_t disp, sprite_t *contr)
             {
                 //show rom cfg screen
 
-                char name_file[64];
+                char name_file[796];
 
                 if (strcmp(pwd, "/") == 0)
                     sprintf(name_file, "/%s", list[cursor].filename);
@@ -3806,21 +3879,14 @@ void handleInput(display_context_t disp, sprite_t *contr)
                      * 1 rom
                      */
 
-                //TODO: this code is very similar to that used in loadFile, we should move it to a seperate function!
-                char _upper_name_file[64];
-
-                strcpy(_upper_name_file, name_file);
-
-                strhicase(_upper_name_file, strlen(_upper_name_file));
-                sprintf(_upper_name_file, "%s", _upper_name_file);
-
+                //TODO: this code is very similar to that used in loadFile, we should move it to a separate function!
                 u8 extension[4];
                 u8 *pch;
-                pch = strrchr(_upper_name_file, '.'); //asd.n64
+                pch = strrchr(name_file, '.'); //asd.n64
 
                 sprintf(extension, "%s", (pch + 1)); //0123456
 
-                if (!strcmp(extension, "Z64") || !strcmp(extension, "V64") || !strcmp(extension, "N64"))
+                if (!strncmpci(extension, "Z64", 4) || !strncmpci(extension, "V64", 4) || !strncmpci(extension, "N64", 4))
                 { //rom
                     //cfg rom
                     sprintf(rom_filename, "%s", list[cursor].filename);
@@ -3911,32 +3977,36 @@ void handleInput(display_context_t disp, sprite_t *contr)
 
             if (list[cursor].type != DT_DIR)
             {
-                //TODO: this code is similar (if not the same) as loadFile and can be optimised!
+                //TODO: this code is similar (if not the same) as loadFile and can be optimized!
                 //open
-                char name_file[64];
+                char *name_file;
 
                 if (strcmp(pwd, "/") == 0)
-                    sprintf(name_file, "/%s", list[cursor].filename);
+                {
+                    int strLength = snprintf(0, 0, "/%s", list[cursor].filename);
+                    //assert(strLength >= 0); // TODO add proper error handling
+                    name_file = malloc(sizeof(char) * (strLength + 1));
+                    snprintf(name_file, strLength+1, "/%s", list[cursor].filename);
+                }
                 else
-                    sprintf(name_file, "%s/%s", pwd, list[cursor].filename);
-
-                char _upper_name_file[64];
-
-                strcpy(_upper_name_file, name_file);
-                strhicase(_upper_name_file, strlen(_upper_name_file));
-                sprintf(_upper_name_file, "%s", _upper_name_file);
+                {
+                    int strLength = snprintf(0, 0, "%s/%s", pwd, list[cursor].filename);
+                    //assert(strLength >= 0); // TODO add proper error handling
+                    name_file = malloc(sizeof(char) * (strLength + 1));
+                    snprintf(name_file, strLength+1, "/%s", list[cursor].filename);
+                }
 
                 u8 extension[4];
                 u8 *pch;
-                pch = strrchr(_upper_name_file, '.');
+                pch = strrchr(name_file, '.');
                 sprintf(extension, "%s", (pch + 1));
 
-                if (!strcmp(extension, "Z64") || !strcmp(extension, "V64") || !strcmp(extension, "N64"))
+                if (!strncmpci(extension, "Z64", 4) || !strncmpci(extension, "V64", 4) || !strncmpci(extension, "N64", 4))
                 { //rom
                     //load rom
                     drawBoxNumber(disp, 3); //rominfo
 
-                    u16 msg = 0;
+                    //u16 msg = 0;
                     evd_ulockRegs();
                     sleep(10);
                     sprintf(rom_filename, "%s", list[cursor].filename);
@@ -3947,15 +4017,19 @@ void handleInput(display_context_t disp, sprite_t *contr)
 
                     input_mapping = abort_screen;
                 }
-                else if (!strcmp(extension, "MPK"))
+                else if (!strncmpci(extension, "MPK", 4))
                 { //mpk file
                     drawBoxNumber(disp, 4);
                     display_show(disp);
 
                     if (strcmp(pwd, "/") == 0)
+                    {
                         sprintf(rom_filename, "/%s", list[cursor].filename);
+                    }
                     else
+                    {
                         sprintf(rom_filename, "%s/%s", pwd, list[cursor].filename);
+                    }
 
                     view_mpk_file(disp, rom_filename);
 
@@ -3964,6 +4038,7 @@ void handleInput(display_context_t disp, sprite_t *contr)
 
                     input_mapping = abort_screen;
                 }
+                free(name_file);
             } //mapping and not dir
             break;
 
@@ -3981,6 +4056,9 @@ void handleInput(display_context_t disp, sprite_t *contr)
                 drawInputAdd(disp, "Q");
             else if (set == 4)
                 drawInputAdd(disp, "X");
+            break;
+
+        default:
             break;
         }
     }
@@ -4019,7 +4097,7 @@ void handleInput(display_context_t disp, sprite_t *contr)
 
             if (list[cursor].type == DT_DIR && empty == 0)
             {
-                char name_dir[256];
+                char *name_dir;
 
                 /* init pwd=/
                          * /
@@ -4032,12 +4110,24 @@ void handleInput(display_context_t disp, sprite_t *contr)
                          */
 
                 if (strcmp(pwd, "/") == 0)
-                    sprintf(name_dir, "/%s", list[cursor].filename);
+                {
+                    int strLength = snprintf(0, 0, "/%s", list[cursor].filename);
+                    //assert(strLength >= 0); // TODO add proper error handling
+                    name_dir = malloc(sizeof(char) * (strLength + 1));
+                    snprintf(name_dir, strLength+1, "/%s", list[cursor].filename);
+                }
                 else
-                    sprintf(name_dir, "%s/%s", pwd, list[cursor].filename);
+                {
+                    int strLength = snprintf(0, 0, "%s/%s", pwd, list[cursor].filename);
+                    //assert(strLength >= 0); // TODO add proper error handling
+                    name_dir = malloc(sizeof(char) * (strLength + 1));
+                    snprintf(name_dir, strLength+1, "%s/%s", pwd, list[cursor].filename);
+                }
 
-                sprintf(curr_dirname, "%s", list[cursor].filename);
+                strcpy(curr_dirname, list[cursor].filename);
                 sprintf(pwd, "%s", name_dir);
+
+                free(name_dir);
 
                 //load dir
                 cursor_lastline = 0;
@@ -4082,25 +4172,29 @@ void handleInput(display_context_t disp, sprite_t *contr)
         }
         case rom_config_box:
         {
-            char name_file[256];
+            char name_file[796];
 
             if (strcmp(pwd, "/") == 0)
                 sprintf(name_file, "/%s", list[cursor].filename);
             else
                 sprintf(name_file, "%s/%s", pwd, list[cursor].filename);
 
-            TCHAR rom_cfg_file[128];
+            TCHAR *rom_cfg_file;
 
-            u8 resp = 0;
+            //u8 resp = 0;
 
             //set rom_cfg
-            sprintf(rom_cfg_file, "/ED64/CFG/%s.CFG", rom_filename);
-
+            int strLength = snprintf(0, 0, "/ED64/CFG/%s.CFG", rom_filename);
+            //assert(strLength >= 0); // TODO add proper error handling
+            rom_cfg_file = malloc(sizeof(char) * (strLength + 1));
+            snprintf(rom_cfg_file, strLength+1, "/ED64/CFG/%s.CFG", rom_filename);
 
             FRESULT result;
             FIL file;
             result = f_open(&file, rom_cfg_file, FA_WRITE | FA_OPEN_ALWAYS);
         
+            free(rom_cfg_file);
+
             if (result == FR_OK)
             {
                 static uint8_t cfg_file_data[512] = {0};
@@ -4345,7 +4439,8 @@ int main(void)
         configure();
 
         //fast boot for backup-save data
-        int sj = evd_readReg(REG_CFG); // not sure if this is needed!
+        //int sj = 
+        evd_readReg(REG_CFG); // not sure if this is needed!
         int save_job = evd_readReg(REG_SAV_CFG); //TODO: or the firmware is V3
 
         if (save_job != 0)
@@ -4449,7 +4544,7 @@ int main(void)
         drawBg(disp);           //new
         drawBoxNumber(disp, 1); //new
 
-        uint32_t *buffer = (uint32_t *)__get_buffer(disp); //fg disp = 2
+        //uint32_t *buffer = (uint32_t *)__get_buffer(disp); //fg disp = 2
 
         display_show(disp); //new
 
@@ -4468,8 +4563,7 @@ int main(void)
 
         position = 0;
         set = 1;
-        sprintf(input_text, "");
-
+        input_text[0]=0; //sprintf(input_text, "");
         //sprite for chr input
         int fp = dfs_open("/sprites/n64controller.sprite");
         sprite_t *contr = malloc(dfs_size(fp));
@@ -4543,4 +4637,5 @@ int main(void)
         for ( ;; )
             ; //never leave!
     }
+    return 0;
 }

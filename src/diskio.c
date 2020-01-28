@@ -24,7 +24,7 @@ DSTATUS disk_status (
 	BYTE pdrv		/* Physical drive nmuber to identify the drive */
 )
 {
-	DSTATUS stat;
+	//DSTATUS stat;
 	// int result;
 
 	// switch (pdrv) {
@@ -69,7 +69,7 @@ DSTATUS disk_initialize (
 )
 {
 	DSTATUS stat;
-	int result;
+	//int result;
 
 	// switch (pdrv) {
 	// case DEV_RAM :
@@ -252,7 +252,7 @@ DRESULT disk_ioctl (
 	void *buff		/* Buffer to send/receive control data */
 )
 {
-	DRESULT res;
+	//DRESULT res;
 	// int result;
 
 	// switch (pdrv) {

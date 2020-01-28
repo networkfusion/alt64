@@ -8,6 +8,9 @@
 #define	_STRLIB_H
 
 #include "types.h"
+#include <stddef.h>
+#include <ctype.h> // for `tolower()`
+#include <limits.h> // for `INT_MIN`
 
 enum strtrim_mode_t {
     STRLIB_MODE_ALL       = 0, 
@@ -19,7 +22,7 @@ enum strtrim_mode_t {
 char *strcpytrim(char *d, // destination
                  char *s, // source
                  int mode,
-                 char *delim
+                 const char *delim
                  );
 
 char *strtriml(char *d, char *s);
@@ -41,5 +44,57 @@ u8 streq(u8 *str1, u8 *str2);
 u8 streql(u8 *str1, u8 *str2, u8 len);
 
 u16 strContain(u8 *target, u8 *str);
+
+static inline int strncmpci(const char * str1, const char * str2, size_t num);
+
+/*
+
+    Case-insensitive string compare (strncmp case-insensitive)
+    - Identical to strncmp except case-insensitive. See: http://www.cplusplus.com/reference/cstring/strncmp/
+    - Aided/inspired, in part, by: https://stackoverflow.com/a/5820991/4561887
+
+    str1    C string 1 to be compared
+    str2    C string 2 to be compared
+    num     max number of chars to compare
+
+    return:
+    (essentially identical to strncmp)
+    INT_MIN  invalid arguments (one or both of the input strings is a NULL pointer)
+    <0       the first character that does not match has a lower value in str1 than in str2
+    0       the contents of both strings are equal
+    >0       the first character that does not match has a greater value in str1 than in str2
+
+    */
+    static inline int strncmpci(const char * str1, const char * str2, size_t num)
+    {
+        int ret_code = INT_MIN;
+
+        size_t chars_compared = 0;
+
+        // Check for NULL pointers
+        if (!str1 || !str2)
+        {
+            goto done;
+        }
+
+        // Continue doing case-insensitive comparisons, one-character-at-a-time, of str1 to str2, 
+        // as long as at least one of the strings still has more characters in it, and we have
+        // not yet compared num chars.
+        while ((*str1 || *str2) && (chars_compared < num))
+        {
+            ret_code = tolower((int)(*str1)) - tolower((int)(*str2));
+            if (ret_code != 0)
+            {
+                // The 2 chars just compared don't match
+                break;
+            }
+            chars_compared++;
+            str1++;
+            str2++;
+        }
+
+    done:
+        return ret_code;
+    }
 
 #endif

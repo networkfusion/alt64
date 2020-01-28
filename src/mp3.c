@@ -111,8 +111,8 @@ static int id3_tag_size(unsigned char const *buf, int remaining)
 
     if (!strncmp((char*)buf, "ID3", 3) || !strncmp((char*)buf, "ea3", 3)) //skip past id3v2 header, which can cause a false sync to be found
     {
-		unsigned int version = buf[3];
-        version = (size<<7) | buf[4];
+		//unsigned int version = buf[3];
+        //version = (size<<7) | buf[4];
 		unsigned int headerflags = buf[5];
         //get the real size from the syncsafe int
         size = buf[6];
@@ -154,8 +154,8 @@ static int MP3_SkipHdr()
     mp3_read(buf, sizeof(buf));
     if (!strncmp((char*)buf, "ID3", 3) || !strncmp((char*)buf, "ea3", 3)) //skip past id3v2 header, which can cause a false sync to be found
     {
-		unsigned int version = buf[3];
-        version = (size<<7) | buf[4];
+		//unsigned int version = buf[3];
+        //version = (size<<7) | buf[4];
 		unsigned int headerflags = buf[5];
         //get the real size from the syncsafe int
         size = buf[6];
@@ -269,7 +269,9 @@ static void decode()
             int tagsize = id3_tag_size(Stream.this_frame, Stream.bufend - Stream.this_frame);
             if (tagsize > 0)
             {
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized" //TODO: correct the lib?!
 				mad_stream_skip (&Stream, tagsize);
+#pragma GCC diagnostic pop
                 continue;
 			}
 		}
@@ -409,7 +411,9 @@ static void MP3_GetInfo(long long *samples, int *rate)
 	mad_stream_finish (&stream);
 
     if (localBuffer)
+	{
     	free(localBuffer);
+	}
 
 	mp3_seek(0, SEEK_SET);
 }
