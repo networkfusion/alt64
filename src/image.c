@@ -165,18 +165,18 @@ void drawImage(display_context_t dcon, sprite_t *sprite) {
 
     rdp_sync(SYNC_PIPE);
     rdp_set_default_clipping();
-    //rdp_enable_texture_copy(); //stock libdragon?
-    uint64_t RDP_CONFIG = ATOMIC_PRIM | ALPHA_DITHER_SEL_NO_DITHER | RGB_DITHER_SEL_NO_DITHER; //libdragon conker64
-    rdp_texture_copy(RDP_CONFIG); //libdragon conker64
+    rdp_enable_texture_copy(); //stock libdragon?
+    //uint64_t RDP_CONFIG = ATOMIC_PRIM | ALPHA_DITHER_SEL_NO_DITHER | RGB_DITHER_SEL_NO_DITHER; //libdragon conker64
+    //rdp_texture_copy(RDP_CONFIG); //libdragon conker64
     rdp_attach_display(dcon);
     // Draw image
     for (int j=0; j<sprite->vslices; j++) {
         x = 0;
         for (int i=0; i<sprite->hslices; i++) {
             rdp_sync(SYNC_PIPE);
-            //rdp_load_texture_stride(0, 0, MIRROR_DISABLED, sprite, j*sprite->hslices + i); //stock libdragon?
-            rdp_load_texture(sprite); //libdragon conker64
-            rdp_draw_sprite(0, x, y);
+            rdp_load_texture_stride(0, 0, MIRROR_DISABLED, sprite, j*sprite->hslices + i); //stock libdragon?
+            //rdp_load_texture(sprite); //libdragon conker64
+            rdp_draw_sprite(0, x, y, MIRROR_DISABLED);
             x += 32;
         }
         y += 16;

@@ -21,6 +21,7 @@ RESDIR = $(ROOTDIR)/res
 CHKSUM64 = $(ROOTDIR)/toolchain/libdragon/tools/chksum64.exe
 MKDFS = $(ROOTDIR)/toolchain/libdragon/tools/mkdfs.exe
 N64TOOL = $(ROOTDIR)/toolchain/libdragon/tools/n64tool.exe
+LDSCRIPT = $(ROOTDIR)/toolchain/libdragon/ldscripts/n64.ld
 
 HEADERNAME = header.ed64
 HEADERTITLE = "EverDrive OS"
@@ -28,11 +29,11 @@ PROG_NAME = OS64
 
 INCLUDE_DIRS = -I$(ROOTDIR)/inc -I$(ROOTDIR)/include -I$(ROOTDIR)/toolchain/gcc-toolchain-mips64/include -I$(ROOTDIR)/toolchain/gcc-toolchain-mips64/mips64-elf/include -I$(ROOTDIR)/toolchain/libdragon/include
 
-COMMON_FLAGS = -std=gnu17 -march=vr4300 -mtune=vr4300 -Wall -Wrestrict -Wno-pointer-sign -D_REENTRANT -DUSE_TRUETYPE $(INCLUDE_DIRS) $(SET_DEBUG)
+COMMON_FLAGS = -std=gnu17 -march=vr4300 -mtune=vr4300 -mno-long-calls -Wall -Wrestrict -Wno-pointer-sign -D_REENTRANT -DUSE_TRUETYPE $(INCLUDE_DIRS) $(SET_DEBUG)
 FLAGS_VT = -O0 $(COMMON_FLAGS)
 FLAGS = -O2 $(COMMON_FLAGS)
 ASFLAGS = -mtune=vr4300 -march=vr4300
-LINK_FLAGS = -G0 -L$(ROOTDIR)/lib -L$(ROOTDIR)/toolchain/gcc-toolchain-mips64/mips64-elf/lib -L$(ROOTDIR)/toolchain/libdragon/lib -ldragon -lmikmod -lmad -lyaml -lm -lc -ldragonsys -Tn64ld.x
+LINK_FLAGS = -G0 -L$(ROOTDIR)/lib -L$(ROOTDIR)/toolchain/gcc-toolchain-mips64/mips64-elf/lib -L$(ROOTDIR)/toolchain/libdragon/lib -ldragon -lmikmod -lmad -lyaml -lm -lc -ldragonsys -T$(LDSCRIPT)
 
 GCCN64PREFIX = $(ROOTDIR)/toolchain/gcc-toolchain-mips64/bin/mips64-elf-
 CC = $(GCCN64PREFIX)gcc.exe
