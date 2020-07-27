@@ -24,13 +24,13 @@ void sndInit(void)
     MikMod_RegisterAllLoaders();
 
     /* initialize the library */
-    md_mode = 0;
+    unsigned short md_mode = 0; //might be global, but we should still define it.
     md_mode |= DMODE_16BITS;
     md_mode |= DMODE_SOFT_MUSIC;
     md_mode |= DMODE_SOFT_SNDFX;
     md_mode |= DMODE_INTERP;
 
-    md_mixfreq = audio_get_frequency();
+    unsigned short md_mixfreq = audio_get_frequency(); //might be global, but we should still define it.
 
     MikMod_Init("");
 

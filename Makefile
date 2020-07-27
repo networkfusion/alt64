@@ -24,12 +24,12 @@ N64TOOL = $(ROOTDIR)/toolchain/libdragon/tools/n64tool.exe
 LDSCRIPT = $(ROOTDIR)/toolchain/libdragon/ldscripts/n64.ld
 
 HEADERNAME = header.ed64
-HEADERTITLE = "EverDrive OS"
+HEADERTITLE = "Altra64 OS"
 PROG_NAME = OS64
 
 INCLUDE_DIRS = -I$(ROOTDIR)/inc -I$(ROOTDIR)/include -I$(ROOTDIR)/toolchain/gcc-toolchain-mips64/include -I$(ROOTDIR)/toolchain/gcc-toolchain-mips64/mips64-elf/include -I$(ROOTDIR)/toolchain/libdragon/include
 
-COMMON_FLAGS = -std=gnu17 -march=vr4300 -mtune=vr4300 -mno-long-calls -Wall -Wrestrict -Wno-pointer-sign -D_REENTRANT -DUSE_TRUETYPE $(INCLUDE_DIRS) $(SET_DEBUG)
+COMMON_FLAGS = -std=gnu99 -march=vr4300 -mtune=vr4300 -mno-long-calls -Wall -Wrestrict -Wno-pointer-sign -D_REENTRANT -DUSE_TRUETYPE $(INCLUDE_DIRS) $(SET_DEBUG)
 FLAGS_VT = -O0 $(COMMON_FLAGS)
 FLAGS = -O2 $(COMMON_FLAGS)
 ASFLAGS = -mtune=vr4300 -march=vr4300
