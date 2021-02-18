@@ -1,4 +1,4 @@
-set PATH=%~dp0toolchain\gcc-toolchain-mips64\bin
+set PATH=%~dp0toolchain\gcc-toolchain-mips64-win64\bin
 @echo off
 
 IF %1.==. (

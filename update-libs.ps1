@@ -10,7 +10,7 @@ $url = "https://n64tools.blob.core.windows.net/binaries/N64-tools/mips64-gcc-too
 $output = "$PSScriptRoot\temp\gcc-toolchain-mips64.zip"
 
 Invoke-WebRequest -Uri $url -OutFile $output
-Expand-Archive -Force -Path $output -DestinationPath "$PSScriptRoot\toolchain\gcc-toolchain-mips64\"
+Expand-Archive -Force -Path $output -DestinationPath "$PSScriptRoot\toolchain\"
 
 $url = "https://n64tools.blob.core.windows.net/binaries/N64-tools/libs/n64/latest/libmikmod.zip"
 $output = "$PSScriptRoot\temp\libmikmod.zip"
